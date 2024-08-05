@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: git clone -b ${GITHUB_REF_NAME} --recurse-submodules https://github.com/siavash79/AOSPMods.git .
+      - run: git clone -b ${GITHUB_REF_NAME} --recurse-submodules https://github.com/siavash79/PixelXpert.git .
         name: Grab source code
         
       - name: Setup JDK 17
@@ -26,28 +26,30 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      - name: Sign app APK
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
 
         id: sign_app
-        run: |
-          if [ ! -z "${{ secrets.KEYSTORE }}" ]; then
-            echo storePassword='${{ secrets.KEYSTORE_PASSWORD }}' >> keystore.properties
-            echo keyAlias='${{ secrets.KEY_ALIAS }}' >> keystore.properties
-            echo keyPassword='${{ secrets.KEY_PASSWORD }}' >> keystore.properties
-            echo storeFile='${{ github.workspace }}/key.jks' >> keystore.properties
-            echo ${{ secrets.KEYSTORE }} | base64 --decode > ${{ github.workspace }}/key.jks
-          fi
-
+        with:
+          releaseDirectory: app/build/outputs/apk/debug
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "33.0.0"
+          
       - name: Magisk Module Generation
         run: .github/make_debug_zip.sh
-        
+
       - name: Upload APK file
         uses: actions/upload-artifact@v2
         with:
           name: PixelXpert_Xposed.apk
           path: ${{steps.sign_app.outputs.signedReleaseFile}}
+        
       - name: Upload Xposed Artifact to Actions
         uses: actions/upload-artifact@v2
         with: 
-          name: AOSPMods_Xposed.zip
+          name: PixelXpert_Xposed.zip
           path: output
