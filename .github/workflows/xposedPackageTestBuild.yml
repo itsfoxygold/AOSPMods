@@ -25,15 +25,6 @@ jobs:
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew build
-          
-      - name: Magisk Module Generation
-        run: .github/make_debug_zip.sh
-
-      - name: Upload APK file
-        uses: actions/upload-artifact@v2
-        with:
-          name: AOSPMods_Xposed.apk
-          path: ${{steps.sign_app.outputs.signedReleaseFile}}
         
       - name: Upload Xposed Artifact to Actions
         uses: actions/upload-artifact@v2
